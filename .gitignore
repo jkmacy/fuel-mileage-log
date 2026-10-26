@@ -1,9 +1,11 @@
-# Never commit personal mileage records or backups
-fuel-mileage-history.csv
-fuel-mileage-*.csv
-fuel-mileage-*.json
-fuel-mileage-backup-*.json
-*Master*Log*.csv
+node_modules/
+js/
+dist/
+.vite/
+*.log
+.DS_Store
+# Never commit historical data or exports.
+*fuel*mileage*.csv
+*fuel*mileage*.json
 *.xlsx
 *.xls
-.DS_Store

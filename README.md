@@ -1,31 +1,59 @@
 # Fuel & Mileage Log
 
-An offline-first fuel and mileage log optimized for Android. Record odometer mileage, trip miles, gallons, and cost; timestamps are recorded on save. Browse and edit local history, and import/export your records.
+An offline-first phone-friendly Progressive Web App built **in Squint**, a lightweight
+ClojureScript dialect. GitHub Pages serves compiled JavaScript; the application logic is
+maintained in `.cljs` source files under `src/`.
 
-## Privacy
+## Develop
 
-This is a **private GitHub repository** containing **application code only**. Do not commit fuel purchase records, spreadsheet exports, or JSON/CSV backups. The application stores personal data locally in browser IndexedDB and does not synchronize with Google Sheets or GitHub. Back up data regularly.
+Requirements: Node.js 22+, npm.
 
-**Important:** GitHub Pages normally publishes a **public website**, even when its source repository is private. Publishing Pages from a private personal repository requires GitHub Pro or another eligible plan. Private Pages access controls require an eligible GitHub Enterprise Cloud organization. A public static shell contains no user data, but anyone with the URL may load the app.
+```sh
+npm install
+npm run dev     # compile Squint, serve locally using Vite
+npm test        # compile Squint and run regression tests
+npm run build   # build dist/ for GitHub Pages
+```
+
+Source files:
+
+- `src/fuel_log/model.cljs`: validation, strict dates, CSV and JSON import, export, deduplication
+- `src/fuel_log/app.cljs`: forms, history, IndexedDB, and browser interaction
+- `index.html`: markup and presentation (no application JavaScript)
+- `sw.js`: small platform-required service worker
+- `test/model.test.mjs`: Node test harness calling compiled Squint functions
+- `.github/workflows/test.yml`: compile, tests and production build on pushes/PRs
+- `.github/workflows/pages.yml`: builds and deploys `dist/` via GitHub Actions
 
 ## Deploy
 
-1. From this repository, open **Settings → Pages**.
-2. If eligible, choose **Build and deployment → Deploy from a branch**.
-3. Choose **master** and **/(root)**, then Save. The project's expected URL is `https://jkmacy.github.io/fuel-mileage-log/`, but it is not live until GitHub reports successful deployment.
-4. Open the URL in Chrome on Android. From its menu choose **Install app** or **Add to Home screen**.
-5. In the app select **Data → Import CSV or JSON** and import your history **directly from your phone**; never upload your CSV to GitHub.
+The repository uses **master** as its default branch. In **Settings → Pages**, set
+**Build and deployment → Source → GitHub Actions**. The `pages.yml` workflow will
+build and deploy the app on each push to master once Pages is configured.
 
-If GitHub Pages is unavailable for this private repository because of your plan, keep the repository private and publish only the app files using a separate public repository or static host such as Neocities.
+Expected website: <https://jkmacy.github.io/fuel-mileage-log/>.
 
-## App files
+**If GitHub Pages is currently configured to deploy from the `master` branch, change it to
+GitHub Actions before using the migrated site.** The branch root contains Squint source,
+not the production compiled application.
 
-- `index.html` — interface and local data storage
-- `manifest.json` and icons — installable app metadata
-- `sw.js` — offline shell caching
-- `.nojekyll` — serve the static files without Jekyll transformations
-- `.gitignore` — excludes common personal exports, but is not a substitute for verifying commits
+## Data compatibility
 
-## Limitations
+- **IndexedDB name**: `fuel-mileage-local-v1`
+- **Store name**: `entries`, keyed by `id`, indexed by `date`
+- **JSON backup marker**: `fuel-mileage-v1`
+- **Date display**: `YYYY-MM-DD`, with `HH:mm` where a genuine time is known
+- **Entry fields**: mileage, trip, gallons, cost. Submission time is automatic.
 
-Local browser storage is tied to the website origin; clearing site data or uninstalling can remove records. Changing host/domain requires exporting and reimporting. Imported historical rows without original timestamps retain dates only. No automatic Google Sheets synchronization.
+These values match the original JavaScript version, so returning to the **same website
+origin and path** should retain existing device records. Still **export a JSON backup**
+before upgrading if you have already entered or imported data. Clearing browser storage
+or switching domains can erase or separate data.
+
+## Privacy
+
+No account, analytics, telemetry, cloud backend, or automatic Google Sheets sync.
+Imported fuel-history CSV and JSON exports are **not** part of this repository and must
+never be checked in. Run the import locally on the phone from the app's Data tab.
+
+This public repository makes application *code* public, **not locally stored records**.

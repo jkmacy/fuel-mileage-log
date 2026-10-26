@@ -1,0 +1,17 @@
+{
+  "name": "fuel-mileage-log",
+  "private": true,
+  "version": "1.1.0",
+  "type": "module",
+  "description": "Offline fuel and mileage log, written in Squint (ClojureScript dialect)",
+  "scripts": {
+    "compile": "squint compile",
+    "build": "npm run compile && vite build --base=./",
+    "dev": "npm run compile && vite --host",
+    "test": "npm run compile && node --test test/*.test.mjs"
+  },
+  "devDependencies": {
+    "squint-cljs": "0.15.212",
+    "vite": "7.1.12"
+  }
+}
