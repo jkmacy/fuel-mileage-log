@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0d1720">
+  <meta name="description" content="A local-first fuel and mileage log with an offline history.">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <title>Fuel & Mileage</title>
+  <style>
+    :root { color-scheme: dark; --bg:#0d1720; --surface:#17232d; --surface2:#1e2e39; --text:#ecf3f5; --muted:#a6bac4; --line:#344752; --accent:#81d4bd; --accent-ink:#08261c; --danger:#ffa9a0; --radius:20px; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    *{box-sizing:border-box} html{background:var(--bg)} body{margin:0;min-height:100dvh;background:var(--bg);color:var(--text);font-size:16px}
+    button,input,select{font:inherit} button{cursor:pointer} a{color:var(--accent)}
+    .shell{max-width:680px;margin:auto;padding:24px 20px 110px}
+    .topline{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:26px}
+    .eyebrow{font-weight:800;letter-spacing:.15em;text-transform:uppercase;font-size:11px;color:var(--accent);margin-bottom:7px}
+    h1{font-size:30px;letter-spacing:-1.2px;line-height:1.13;margin:0;font-weight:750} h2{margin:0;font-size:20px;letter-spacing:-.45px} h3{margin:0;font-size:16px}
+    .iconbox{width:49px;height:49px;display:grid;place-items:center;border:1px solid var(--line);border-radius:15px;color:var(--accent);background:var(--surface)}
+    .subtitle{font-size:14px;line-height:1.5;color:var(--muted);margin:8px 0 0}
+    .today{display:flex;align-items:center;gap:9px;margin:22px 0 18px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;color:var(--muted);font-size:13px;background:#14212a}
+    .today strong{color:var(--text);font-weight:650} .dot{height:7px;width:7px;background:var(--accent);border-radius:50%;flex-shrink:0}
+    .panel{border:1px solid var(--line);background:var(--surface);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+    .heading-row{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:20px}
+    .tip{color:var(--muted);font-size:12px;margin:0}
+    form{display:grid;gap:17px}
+    .field label{display:block;font-size:13px;font-weight:650;color:var(--text);margin-bottom:8px}
+    .field input,.field select,.search{display:block;width:100%;border-radius:12px;border:1px solid #465964;background:var(--surface2);color:var(--text);min-height:52px;padding:12px 14px;font-size:20px;outline:none;transition:border-color .15s}
+    .field input:focus,.search:focus,.field select:focus{border:2px solid var(--accent);padding-inline:13px}
+    .field input::placeholder,.search::placeholder{color:#8ca0aa}
+    .field .hint{font-size:12px;color:var(--muted);margin-top:6px}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .btn{min-height:50px;border-radius:13px;border:1px solid var(--line);padding:11px 15px;font-weight:700;letter-spacing:-.2px;background:var(--surface2);color:var(--text)}
+    .btn-primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+    .btn:focus-visible,.tab:focus-visible,.mini:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+    .form-buttons{display:flex;gap:9px;margin-top:8px}.form-buttons .btn-primary{flex:1}
+    .small-link{border:0;background:none;color:var(--accent);padding:8px;font-size:13px;font-weight:600}
+    .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 16px}
+    .stat{padding:16px;background:var(--surface);border:1px solid var(--line);border-radius:15px}
+    .stat label{display:block;color:var(--muted);font-size:12px;margin-bottom:8px}.stat strong{display:block;font-size:22px;font-variant-numeric:tabular-nums;white-space:nowrap}
+    .entries{display:grid;gap:10px}.entry{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px}
+    .entry-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}.entry-time{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+    .entry-cost{font-size:22px;font-weight:750;letter-spacing:-.6px;font-variant-numeric:tabular-nums}
+    .entry-info{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px;padding-top:13px;border-top:1px solid var(--line)}
+    .entry-info label{display:block;color:var(--muted);font-size:11px;margin-bottom:4px}.entry-info strong{font-size:14px;font-weight:650;font-variant-numeric:tabular-nums}
+    .entry-actions{display:flex;gap:6px;justify-content:flex-end;margin-top:12px}.mini{background:none;border:1px solid var(--line);color:var(--muted);border-radius:9px;padding:7px 11px;font-size:12px;font-weight:650}
+    .mini.delete{color:var(--danger)}
+    .tools{display:grid;grid-template-columns:minmax(0,1fr) 118px;gap:10px;margin:18px 0}.search{min-height:46px;font-size:15px}.tools select{width:100%;min-height:46px;border:1px solid var(--line);border-radius:12px;background:var(--surface2);color:var(--text);padding:0 7px}
+    .count{color:var(--muted);font-size:13px;margin-bottom:14px}
+    .empty{padding:42px 20px;text-align:center;border:1px dashed var(--line);border-radius:16px;color:var(--muted);line-height:1.55}
+    .actions{display:grid;gap:10px}.actions button{width:100%;text-align:left}
+    .notice{color:var(--muted);font-size:14px;line-height:1.65;margin:13px 0}
+    .notice strong{color:var(--text)} .safe{margin-top:15px;padding:13px 14px;border-left:3px solid var(--accent);border-radius:8px;background:#152b2b;color:#c5d9d7;font-size:13px;line-height:1.5}
+    .hidden{display:none!important}
+    .tabs{position:fixed;bottom:0;left:0;right:0;z-index:10;background:#111d26ed;backdrop-filter:blur(14px);border-top:1px solid var(--line);display:flex;justify-content:center;padding:8px 12px calc(10px + env(safe-area-inset-bottom))}
+    .tab-wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;max-width:680px;width:100%}
+    .tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:var(--muted);background:transparent;border:0;border-radius:12px;padding:8px 3px;min-height:49px;font-size:11px;font-weight:700}
+    .tab.active{background:#213b3b;color:var(--accent)} .tab svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+    .toast{position:fixed;bottom:92px;left:50%;transform:translateX(-50%);background:#d8f5e8;color:#143a2c;font-size:14px;font-weight:700;padding:12px 18px;border-radius:11px;box-shadow:0 10px 40px #0008;z-index:50;max-width:calc(100% - 32px);width:max-content}
+    footer{color:var(--muted);font-size:12px;margin-top:20px;line-height:1.6}
+    @media(prefers-color-scheme:light){:root{color-scheme:light;--bg:#f4f7f7;--surface:#fff;--surface2:#f4f8f8;--text:#142731;--muted:#526875;--line:#d3dfe2;--accent:#146653;--accent-ink:#fff;--danger:#b43e31} .today{background:#eef5f3}.safe{background:#e5f4ed;color:#244c3d}.tabs{background:#f9fcfcee}.tab.active{background:#def0e8}}
+    @media(max-width:350px){.shell{padding:18px 14px 115px}.panel{padding:15px}.entry-info{gap:4px}.entry-info strong{font-size:12px}.row2{gap:9px}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topline"><div><div class="eyebrow">Personal log</div><h1>Fuel &amp; Mileage</h1><p class="subtitle">A simple record of every fill-up.</p></div><div class="iconbox" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20V5c0-1 .8-2 2-2h9v17"/><path d="M2 20h14M6 7h5v5H6z"/><path d="M14 8h2l3 3v5a2 2 0 0 0 4 0v-5l-2-2"/></svg></div></header>
+    <section id="page-add" data-page="add">
+      <div class="today"><span class="dot"></span><span>Recorded automatically when saved: <strong id="clock-label">—</strong></span></div>
+      <div class="stats"><div class="stat"><label>Latest odometer</label><strong id="latest-mileage">—</strong></div><div class="stat"><label>Logged fill-ups</label><strong id="total-entries">0</strong></div></div>
+      <section class="panel"><div class="heading-row"><h2 id="form-heading">New fill-up</h2><span class="tip">4 fields</span></div>
+        <form id="entry-form">
+          <div class="field"><label for="mileage">Current mileage (mi)</label><input id="mileage" name="mileage" type="number" inputmode="numeric" step="1" min="0" max="9999999" required placeholder="e.g. 108900"><div class="hint" id="last-reading-hint">Your current odometer reading</div></div>
+          <div class="field"><label for="trip">Trip miles (mi)</label><input id="trip" name="trip" type="number" inputmode="decimal" step="any" min="0" max="99999" required placeholder="e.g. 296.4"></div>
+          <div class="row2"><div class="field"><label for="gallons">Gallons</label><input id="gallons" name="gallons" type="number" inputmode="decimal" step="any" min="0.001" max="999" required placeholder="e.g. 12.845"></div><div class="field"><label for="cost">Total cost ($)</label><input id="cost" name="cost" type="number" inputmode="decimal" step="any" min="0.01" max="99999" required placeholder="e.g. 42.50"></div></div>
+          <div class="form-buttons"><button class="btn btn-primary" type="submit" id="save-button">Save fill-up</button><button type="button" class="btn hidden" id="cancel-edit">Cancel</button></div>
+        </form>
+      </section>
+      <section><div class="heading-row"><h2>Most recent</h2><button class="small-link" data-goto="history">View history</button></div><div id="recent-entry"></div></section>
+    </section>
+    <section id="page-history" data-page="history" class="hidden"><div class="heading-row"><div><h2>History</h2><p class="subtitle">All your fill-ups, newest first.</p></div><button class="btn btn-primary" data-goto="add">+ Add</button></div>
+      <div class="tools"><input id="search" class="search" type="search" placeholder="Search date or mileage" aria-label="Search entries"><select id="year-filter" aria-label="Filter by year"><option value="all">All years</option></select></div>
+      <div id="history-count" class="count"></div><div id="history-list" class="entries"></div>
+    </section>
+    <section id="page-data" data-page="data" class="hidden"><h2>Data &amp; backups</h2><p class="subtitle">Your entries are stored on this device, in this app's browser storage.</p>
+      <section class="panel" style="margin-top:20px"><h3>Import history</h3><p class="notice">Import your original Google Sheets CSV, an exported app CSV, or an app JSON backup. Duplicate records will be skipped.</p><div class="actions"><button id="import-button" class="btn">Import CSV or JSON</button><input id="file-input" class="hidden" type="file" accept=".csv,.json,text/csv,application/json" aria-label="Choose CSV file"></div><p id="import-status" class="notice" aria-live="polite"></p></section>
+      <section class="panel"><h3>Export backups</h3><p class="notice">Export often. Clearing browser data, uninstalling the app, or changing its website address can remove your local records.</p><div class="actions"><button id="export-csv" class="btn">Export CSV</button><button id="export-json" class="btn">Export JSON backup</button></div></section>
+      <div class="safe"><strong>Privacy:</strong> No account, ads, analytics, or cloud synchronization. Entries never leave this device unless you export or share a backup. Do not upload personal CSV backups to a public website or repository.</div>
+      <footer>Existing entries imported from Google Sheets without a timestamp display only their recorded date. Historical timestamps with a time are preserved as written in the sheet; new timestamps use your device's local time.</footer>
+    </section>
+  </main>
+  <nav class="tabs" aria-label="Main navigation"><div class="tab-wrap">
+    <button class="tab active" data-goto="add" aria-current="page"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span>Add</span></button>
+    <button class="tab" data-goto="history"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7M3 3v6h6M12 7v5l4 3"/></svg><span>History</span></button>
+    <button class="tab" data-goto="data"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span>Data</span></button>
+  </div></nav>
+  <div class="toast hidden" id="toast" role="status" aria-live="polite"></div>
+  <script>
+    'use strict';
+    const $ = (sel) => document.querySelector(sel);
+    const DB_NAME='fuel-mileage-local-v1', STORE='entries';
+    let db, entries=[], editingId=null, toastTimer;
+    const pad=n=>String(n).padStart(2,'0');
+    const dateLocal=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    const timeLocal=d=>`${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    const fmtN=n=>Number(n).toLocaleString('en-US',{maximumFractionDigits:1});
+    const fmtG=n=>Number(n).toLocaleString('en-US',{minimumFractionDigits:3,maximumFractionDigits:3});
+    const fmtUSD=n=>Number(n).toLocaleString('en-US',{style:'currency',currency:'USD'});
+    const safeText=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    function showToast(msg){clearTimeout(toastTimer);const el=$('#toast');el.textContent=msg;el.classList.remove('hidden');toastTimer=setTimeout(()=>el.classList.add('hidden'),3500)}
+    function openDatabase(){return new Promise((resolve,reject)=>{if(!window.indexedDB){reject(Error('IndexedDB is not supported'));return}const req=indexedDB.open(DB_NAME,1);req.onupgradeneeded=()=>{const database=req.result;const store=database.createObjectStore(STORE,{keyPath:'id'});store.createIndex('date','date',{unique:false})};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
+    function getAll(){return new Promise((resolve,reject)=>{const req=db.transaction(STORE,'readonly').objectStore(STORE).getAll();req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)})}
+    function putAll(records){return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');const store=tx.objectStore(STORE);for(const r of records)store.put(r);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error)})}
+    function del(id){return new Promise((resolve,reject)=>{const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).delete(id);tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)})}
+    function uid(){return (window.crypto&&crypto.randomUUID)?crypto.randomUUID():'entry-'+Date.now()+'-'+Math.random().toString(36).slice(2)}
+    function recordDateTime(e){if(e.recordedAt){const d=new Date(e.recordedAt);if(!Number.isNaN(d.getTime()))return `${dateLocal(d)} ${timeLocal(d)}`;}if(e.sourceTimestamp){const m=e.sourceTimestamp.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/);if(m)return `${m[3]}-${pad(m[1])}-${pad(m[2])} ${pad(m[4])}:${m[5]}`;}return e.date;}
+    function sortEntries(a,b){const dateCmp=b.date.localeCompare(a.date);if(dateCmp)return dateCmp;const first=(b.recordedAt||b.sourceTimestamp||''),second=(a.recordedAt||a.sourceTimestamp||'');return first.localeCompare(second)}
+    function renderEntry(e){return `<article class="entry"><div class="entry-top"><div><div class="entry-time">${safeText(recordDateTime(e))}</div><div style="font-size:12px;color:var(--muted);margin-top:5px">${e.origin==='sheet'?'Imported record':'Saved on device'}</div></div><div class="entry-cost">${fmtUSD(e.cost)}</div></div><div class="entry-info"><div><label>Odometer</label><strong>${fmtN(e.mileage)} mi</strong></div><div><label>Trip</label><strong>${fmtN(e.trip)} mi</strong></div><div><label>Fuel</label><strong>${fmtG(e.gallons)} gal</strong></div></div><div class="entry-actions"><button class="mini" data-edit="${safeText(e.id)}">Edit</button><button class="mini delete" data-delete="${safeText(e.id)}">Delete</button></div></article>`}
+    function showPage(page){document.querySelectorAll('[data-page]').forEach(el=>el.classList.toggle('hidden',el.dataset.page!==page));document.querySelectorAll('button.tab').forEach(el=>{const on=el.dataset.goto===page;el.classList.toggle('active',on);on?el.setAttribute('aria-current','page'):el.removeAttribute('aria-current')});if(page==='history')renderHistory();window.scrollTo({top:0,behavior:'instant'})}
+    function refresh(){entries.sort(sortEntries);$('#total-entries').textContent=fmtN(entries.length);const newestMileage=entries.length?Math.max(...entries.map(e=>Number(e.mileage))):null;$('#latest-mileage').textContent=newestMileage===null?'—':fmtN(newestMileage);$('#last-reading-hint').textContent=newestMileage===null?'Your current odometer reading':`Last logged odometer: ${fmtN(newestMileage)} mi`;
+      $('#recent-entry').innerHTML=entries.length?renderEntry(entries[0]):'<div class="empty">No fill-ups yet. Add your first entry or import your history.</div>';
+      const current=$('#year-filter').value;const years=[...new Set(entries.map(e=>e.date.slice(0,4)))].sort().reverse();$('#year-filter').innerHTML='<option value="all">All years</option>'+years.map(y=>`<option value="${y}">${y}</option>`).join('');$('#year-filter').value=years.includes(current)?current:'all';renderHistory();}
+    function renderHistory(){const q=$('#search').value.trim().toLowerCase(),year=$('#year-filter').value;const filtered=entries.filter(e=>(year==='all'||e.date.startsWith(year))&&(!q||[e.date,recordDateTime(e),String(e.mileage),String(e.trip),String(e.cost)].some(s=>s.toLowerCase().includes(q))));$('#history-count').textContent=`${filtered.length} of ${entries.length} entries`;
+      $('#history-list').innerHTML=filtered.length?filtered.map(renderEntry).join(''):'<div class="empty">No matching records.</div>'}
+    function clearForm(){editingId=null;$('#entry-form').reset();$('#form-heading').textContent='New fill-up';$('#save-button').textContent='Save fill-up';$('#cancel-edit').classList.add('hidden')}
+    async function save(e){e.preventDefault();if(!db){showToast('Storage unavailable');return}const ids=['mileage','trip','gallons','cost'];const vals=ids.map(id=>Number($('#'+id).value));if(vals.some(v=>!Number.isFinite(v))||vals[0]<0||vals[1]<0||vals[2]<=0||vals[3]<=0){showToast('Check the numbers and try again');return}let r;if(editingId){r=entries.find(e=>e.id===editingId);if(!r)return;r={...r,mileage:vals[0],trip:vals[1],gallons:vals[2],cost:vals[3]};}else{const now=new Date();r={id:uid(),date:dateLocal(now),recordedAt:now.toISOString(),sourceTimestamp:'',mileage:vals[0],trip:vals[1],gallons:vals[2],cost:vals[3],origin:'app'};}
+      const wasEdit=!!editingId;try{await putAll([r]);entries=await getAll();clearForm();refresh();showPage('history');showToast(wasEdit?'Entry updated':'Fill-up saved');}catch(err){console.error(err);showToast('Could not save entry')}}
+    function edit(id){const r=entries.find(e=>e.id===id);if(!r)return;editingId=id;for(const f of ['mileage','trip','gallons','cost'])$('#'+f).value=r[f];$('#form-heading').textContent='Edit fill-up';$('#save-button').textContent='Save changes';$('#cancel-edit').classList.remove('hidden');showPage('add');$('#mileage').focus()}
+    async function remove(id){const r=entries.find(e=>e.id===id);if(!r)return;if(!confirm(`Delete the fill-up from ${recordDateTime(r)}? This cannot be undone.`))return;try{await del(id);entries=await getAll();refresh();showToast('Entry deleted')}catch(err){console.error(err);showToast('Could not delete entry')}}
+    function csvRows(s){const out=[],row=[];let cell='',inside=false;for(let i=0;i<s.length;i++){const c=s[i];if(c==='"'){if(inside&&s[i+1]==='"'){cell+='"';i++;}else inside=!inside;}else if(c===','&&!inside){row.push(cell);cell='';}else if((c==='\n'||c==='\r')&&!inside){if(c==='\r'&&s[i+1]==='\n')i++;row.push(cell);if(row.some(x=>x!==''))out.push([...row]);row.length=0;cell='';}else cell+=c;}if(inside)throw Error('CSV has an unclosed quote');row.push(cell);if(row.some(x=>x!==''))out.push(row);return out}
+    function parseDate(s){s=String(s||'').trim();if(/^\d{4}-\d{2}-\d{2}$/.test(s)){const d=new Date(s+'T12:00:00');return Number.isNaN(d.getTime())||dateLocal(d)!==s?null:s}const m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(m){const d=new Date(Number(m[3]),Number(m[1])-1,Number(m[2]));if(d.getFullYear()!==Number(m[3])||d.getMonth()!==Number(m[1])-1||d.getDate()!==Number(m[2]))return null;return dateLocal(d)}return null}
+    function parseNumber(s){return Number(String(s??'').replace(/[$,\s]/g,''))}
+    function fingerprint(r){return [r.date,r.mileage,r.trip,r.gallons,r.cost].join('|')}
+    async function importCSV(file){const content=await file.text();const rows=csvRows(content.replace(/^\uFEFF/,''));if(rows.length<2)throw Error('No data rows found');const header=rows[0].map(x=>x.trim().toLowerCase());const field=(r,aliases)=>{for(const a of aliases){const i=header.indexOf(a);if(i!==-1)return r[i]||'';}return ''};
+      for(const required of ['current mileage','trip miles','gallons','cost'])if(!header.includes(required))throw Error('Missing column: '+required);
+      const existing=new Set(entries.map(fingerprint));const incoming=[];let duplicates=0,invalid=0;
+      for(const row of rows.slice(1)){const date=parseDate(field(row,['date']));const mileage=parseNumber(field(row,['current mileage']));const trip=parseNumber(field(row,['trip miles']));const gallons=parseNumber(field(row,['gallons']));const cost=parseNumber(field(row,['cost']));if(!date||![mileage,trip,gallons,cost].every(Number.isFinite)||mileage<0||trip<0||gallons<=0||cost<=0){invalid++;continue}
+        const recordedRaw=field(row,['recorded at','recordedat']).trim();const recordedAt=recordedRaw&&!Number.isNaN(new Date(recordedRaw).getTime())?new Date(recordedRaw).toISOString():null;
+        const sourceTimestamp=field(row,['source timestamp','timestamp']).trim();const r={id:uid(),date,recordedAt,sourceTimestamp,mileage,trip,gallons,cost,origin:field(row,['origin'])||'sheet'};
+        const fp=fingerprint(r);if(existing.has(fp)){duplicates++;continue}existing.add(fp);incoming.push(r);
+      }
+      if(incoming.length){await putAll(incoming);entries=await getAll();refresh()};return {added:incoming.length,duplicates,invalid};}
+    async function importJSON(file){const obj=JSON.parse(await file.text());if(!obj||obj.format!=='fuel-mileage-v1'||!Array.isArray(obj.entries))throw Error('Unrecognized JSON backup');
+      const existing=new Set(entries.map(fingerprint)),incoming=[];let duplicates=0,invalid=0;
+      for(const raw of obj.entries){if(!raw||typeof raw!=='object'){invalid++;continue}const date=parseDate(raw.date),mileage=Number(raw.mileage),trip=Number(raw.trip),gallons=Number(raw.gallons),cost=Number(raw.cost);if(!date||![mileage,trip,gallons,cost].every(Number.isFinite)||mileage<0||trip<0||gallons<=0||cost<=0){invalid++;continue}
+        const recordedAt=raw.recordedAt&&!Number.isNaN(new Date(raw.recordedAt).getTime())?new Date(raw.recordedAt).toISOString():null;
+        const r={id:uid(),date,recordedAt,sourceTimestamp:String(raw.sourceTimestamp||''),mileage,trip,gallons,cost,origin:raw.origin==='sheet'?'sheet':'app'};
+        const fp=fingerprint(r);if(existing.has(fp)){duplicates++;continue}existing.add(fp);incoming.push(r);
+      }
+      if(incoming.length){await putAll(incoming);entries=await getAll();refresh()}return {added:incoming.length,duplicates,invalid};}
+    function quoteCSV(v){const s=String(v??'');return /[",\n\r]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
+    function download(name,content,type){const blob=new Blob([content],{type}),url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),5000)}
+    function exportCSV(){const headers=['Recorded At','Date','Current Mileage','Trip Miles','Gallons','Cost','Source Timestamp','Origin'];const lines=[headers,...entries.map(e=>[e.recordedAt||'',e.date,e.mileage,e.trip,e.gallons,e.cost,e.sourceTimestamp||'',e.origin||'app'])];download('fuel-mileage-'+dateLocal(new Date())+'.csv',lines.map(row=>row.map(quoteCSV).join(',')).join('\r\n')+'\r\n','text/csv;charset=utf-8')}
+    function exportJSON(){download('fuel-mileage-backup-'+dateLocal(new Date())+'.json',JSON.stringify({format:'fuel-mileage-v1',exportedAt:new Date().toISOString(),entries},null,2),'application/json')}
+    async function init(){try{db=await openDatabase();entries=await getAll();refresh()}catch(err){console.error(err);$('#entry-form').querySelectorAll('input,button').forEach(el=>el.disabled=true);$('#recent-entry').innerHTML='<div class="empty">Local storage is unavailable in this browser. Try Chrome or Brave over HTTPS.</div>';showToast('Storage is unavailable')}
+      const clock=()=>$('#clock-label').textContent=`${dateLocal(new Date())} ${timeLocal(new Date())}`;clock();setInterval(clock,30000);
+      document.querySelectorAll('[data-goto]').forEach(b=>b.addEventListener('click',()=>showPage(b.dataset.goto)));
+      $('#entry-form').addEventListener('submit',save);$('#cancel-edit').addEventListener('click',clearForm);
+      $('#search').addEventListener('input',renderHistory);$('#year-filter').addEventListener('change',renderHistory);
+      document.addEventListener('click',ev=>{const editB=ev.target.closest('[data-edit]'),deleteB=ev.target.closest('[data-delete]');if(editB)edit(editB.dataset.edit);if(deleteB)remove(deleteB.dataset.delete)});
+      $('#import-button').addEventListener('click',()=>$('#file-input').click());$('#file-input').addEventListener('change',async(ev)=>{const file=ev.target.files[0];if(!file)return;try{const r=file.name.toLowerCase().endsWith('.json')?await importJSON(file):await importCSV(file);const msg=`Imported ${r.added} records; ${r.duplicates} duplicates skipped; ${r.invalid} invalid rows.`;$('#import-status').textContent=msg;showToast(`${r.added} records imported`)}catch(err){$('#import-status').textContent='Import error: '+err.message;showToast('Import failed')}ev.target.value=''});
+      $('#export-csv').addEventListener('click',exportCSV);$('#export-json').addEventListener('click',exportJSON);
+      if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(err=>console.warn('Offline install unavailable',err));}
+    init();
+  </script>
+</body>
+</html>

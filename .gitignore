@@ -1,0 +1,9 @@
+# Never commit personal mileage records or backups
+fuel-mileage-history.csv
+fuel-mileage-*.csv
+fuel-mileage-*.json
+fuel-mileage-backup-*.json
+*Master*Log*.csv
+*.xlsx
+*.xls
+.DS_Store
